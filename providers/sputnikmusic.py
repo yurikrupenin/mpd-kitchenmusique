@@ -14,7 +14,9 @@ class SputnikMusic:
         page = requests.get("https://sputnikmusic.com")
         self.tree = html.fromstring(page.content)
 
-        for pos in range(1, 26):
+        for pos in range(1, 16):
+            # This lazy Xpath grabs (artist album) tuples from "Trending albums" table.
+            # This will probably break after slightest redesign, but hey it works for now.
             self.albumlist.append(AlbumEntry(\
                  self.tree.xpath("/html/body/table/tr[3]/td/table/tr[1]/td[3]/table/tr[2]/td/table/tr[{0}]/td[1]/a/font/text()".format(pos)),
                  self.tree.xpath("/html/body/table/tr[3]/td/table/tr[1]/td[3]/table/tr[2]/td/table/tr[{0}]/td[1]/a/font/span/text()".format(pos))
@@ -26,6 +28,7 @@ class SputnikMusic:
             self.albumlist))
                
 
-    def get_albums(self):
+    # Returns list of albums in "Trending albums" category
+    def get_trending_albums(self):
         return self.albumlist
 

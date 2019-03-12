@@ -18,7 +18,7 @@ if __name__ == "__main__":
     print("MPD version: {0}".format(client.mpd_version))
     client.clear()
 
-    for entry in providers.SputnikMusic().get_albums():
+    for entry in providers.SputnikMusic().get_trending_albums():
         albumtracks = gproxy.Request(config.CONFIG_GPROXY_HOST, config.CONFIG_GPROXY_PORT)\
             .search_for_album()\
             .search_by_artist(entry.artist)\
