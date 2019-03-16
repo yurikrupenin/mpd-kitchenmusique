@@ -7,6 +7,8 @@ from mpd import (MPDClient, CommandError)
 
 from kitchenmusique import config, gproxy
 
+from kitchenmusique.core.types import PlaylistUpdateMode
+
 class PlaylistUpdater:
 
     def __init__(self):
@@ -34,7 +36,7 @@ class PlaylistUpdater:
     def update_provider(self, providerDesc):
         client = MPDClient()
         client.timeout = 10
-        client.ideltimeout = None
+        client.idletimeout = None
 
         self.logger.info("Updating playlist using provider {0}".format(providerDesc.provider.__name__))
 
@@ -58,13 +60,22 @@ class PlaylistUpdater:
                 return False
 
         self.logger.debug("Connected to MPD; version: {0}".format(client.mpd_version))
+        self.logger.debug("Client status: {0}".format(client.status()))
 
-        f = client.status()
-        print(f)
-        if client.status()['state'] != 'play':
-            client.clear()
+
+        if config.CONFIG_MPD_FORCE_CONSUME_MODE == True and client.status()['consume'] != '1':
+            client.consume(1)
 
         provider = providerDesc.provider()
+
+        if providerDesc.playlist is not None and providerDesc.updatemode == PlaylistUpdateMode.REPLACE:
+            try:
+                client.playlistclear(providerDesc.playlist)
+            # Probably no playlist with that name, let's create it first and ONLY THEN clear it
+            except CommandError:
+                client.save(providerDesc.playlist)
+                client.playlistclear(providerDesc.playlist)
+
         for entry in provider.get_playlist(providerDesc.querystring):
             albumtracks = gproxy.Request(config.CONFIG_GPROXY_HOST, config.CONFIG_GPROXY_PORT) \
                 .search_for_album() \
@@ -72,15 +83,28 @@ class PlaylistUpdater:
                 .search_by_album(entry.album) \
                 .get()
 
-            for track in albumtracks:
-                print("{0} ({1})".format(track.title, track.url))
-                client.add(track.url)
 
+            for track in albumtracks:
+                if providerDesc.playlist is not None:
+                    try:
+                        client.playlistadd(providerDesc.playlist, track.url)
+                    except CommandError:
+                        client.save(providerDesc.playlist)
+                        client.playlistclear(providerDesc.playlist)
+                        client.playlistadd(providerDesc.playlist, track.url)
+
+
+                if providerDesc.enqueue:
+                    self.logger.info("Enqueuing track '{0}' ({1})".format(track.title, track.url))
+                    client.add(track.url)
+
+        # TODO remove this after presence detection is complete
         if client.status()['state'] != 'play':
             client.play()
 
+        self.logger.debug("Current playlist: ")
         for song in client.playlistinfo():
-            print(song)
+            self.logger.debug(song)
 
     def update_all(self):
         for entry in self.providers:
