@@ -1,13 +1,6 @@
 import logging
-import requests
-
-# mpd client throws this when connection fails
-from socket import error as SocketError
-from mpd import (MPDClient, CommandError)
-
 from kitchenmusique import core
 
-import kitchenmusique.config as config
 
 if __name__ == "__main__":
     playlistUpdater = core.PlaylistUpdater()

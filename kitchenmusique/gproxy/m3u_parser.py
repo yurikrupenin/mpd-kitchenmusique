@@ -1,6 +1,3 @@
-import os
-import re
-
 from collections import namedtuple
 
 PlaylistEntry = namedtuple("PlaylistEntry", "title length url")
