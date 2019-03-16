@@ -18,7 +18,7 @@ def main():
 
     playlistUpdater.register_providers_from_config()
 
-    playlistUpdater.update_all()
+    playlistUpdater.start()
 
     logger.info("Kitchenmusique -- exiting successfully")
     return True

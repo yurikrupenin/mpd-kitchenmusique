@@ -1,4 +1,6 @@
 ﻿import logging
+import sched
+import time
 
 # mpd client throws this when connection fails
 from socket import error as SocketError
@@ -14,6 +16,7 @@ class PlaylistUpdater:
     def __init__(self):
         self.logger = logging.getLogger("kitchenmusique")
         self.providers = []
+        self.scheduler = sched.scheduler(time.time, time.sleep)
 
 
     def register_providers_from_config(self):
@@ -106,6 +109,32 @@ class PlaylistUpdater:
         for song in client.playlistinfo():
             self.logger.debug(song)
 
-    def update_all(self):
+    def __update_provider_sched_wrapper(self, desc):
+        try:
+            self.update_provider(desc)
+        except Exception as e:
+            self.logger.error("Failed to update provider '{0}' - {1}!".format(desc.provider.__name__, e))
+        finally:
+            self.scheduler.enter(
+                desc.updateinterval * 60,
+                1,
+                self.__update_provider_sched_wrapper,
+                (desc,))
+
+
+    def start(self):
+        self.logger.debug("PlaylistUpdater -- starting and scheduling next updates...")
+
         for entry in self.providers:
-            self.update_provider(entry)
+            try:
+                self.update_provider(entry)
+            except Exception as e:
+                self.logger.error("Failed to update provider '{0}' - {1}!".format(entry.provider.__name__, e))
+            finally:
+                self.scheduler.enter(
+                    entry.updateinterval * 60,
+                    1,
+                    self.__update_provider_sched_wrapper,
+                    (entry,))
+
+        self.scheduler.run()
