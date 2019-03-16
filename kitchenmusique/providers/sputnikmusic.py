@@ -1,10 +1,7 @@
 from lxml import html
 import requests
 
-from collections import namedtuple
-
-AlbumEntry = namedtuple("AlbumEntry", "artist album")
-
+from kitchenmusique.core.types import AlbumEntry
 
 class SputnikMusic:
 
@@ -31,4 +28,9 @@ class SputnikMusic:
     # Returns list of albums in "Trending albums" category
     def get_trending_albums(self):
         return self.albumlist
+
+    def get_playlist(self, querystring):
+        return {
+           "trending": self.get_trending_albums()
+        }[querystring]
 
