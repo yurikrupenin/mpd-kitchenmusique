@@ -3,7 +3,7 @@ from enum import Enum
 import requests
 import urllib3
 
-from gproxy.m3u_parser import M3uParser
+from kitchenmusique.gproxy.m3u_parser import M3uParser
 
 
 class RequestType(Enum):
