@@ -2,9 +2,9 @@
 
 class PlaylistUpdater:
 
-	def __init__(self):
-		self.providers = []
-		
+    def __init__(self):
+        self.providers = []
 
-	def register_provider(self, item):
-		providers.append(item())
+
+    def register_provider(self, item):
+        providers.append(item())
