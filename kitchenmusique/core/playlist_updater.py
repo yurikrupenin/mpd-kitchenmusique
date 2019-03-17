@@ -101,9 +101,6 @@ class PlaylistUpdater:
                     self.logger.info("Enqueuing track '{0}' ({1})".format(track.title, track.url))
                     client.add(track.url)
 
-        # TODO remove this after presence detection is complete
-        if client.status()['state'] != 'play':
-            client.play()
 
         self.logger.debug("Current playlist: ")
         for song in client.playlistinfo():

@@ -6,6 +6,7 @@ import numpy as np
 
 import kitchenmusique.config as config
 
+from kitchenmusique.core import DetectedObject
 
 class PersonDetector:
 
@@ -49,7 +50,7 @@ class PersonDetector:
         return img
 
 
-    def visualize(self, image):
+    def process(self, image, visualize):
         width = image.shape[1]
         height = image.shape[0]
 
@@ -86,6 +87,8 @@ class PersonDetector:
 
         indices = cv2.dnn.NMSBoxes(boxes, confidences, config.CONFIG_YOLO_CONFIDENCE_THRESHOLD, nms_threshold)
 
+        descs = []
+
         for i in indices:
             i = i[0]
             box = boxes[i]
@@ -93,6 +96,8 @@ class PersonDetector:
             y = box[1]
             w = box[2]
             h = box[3]
+
+            descs.append(DetectedObject(self.classes[class_ids[i]], confidences[i]))
 
             image = self.__visualize_prediction(
                 image,
@@ -104,6 +109,8 @@ class PersonDetector:
                 round(y + h)
             )
 
-        cv2.imshow("object detection", image)
-        cv2.waitKey(1)
+        if visualize:
+            cv2.imshow("object detection", image)
+            cv2.waitKey(1)
 
+        return descs
