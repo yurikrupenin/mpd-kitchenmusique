@@ -1,5 +1,8 @@
 import logging
-from kitchenmusique import core
+import threading
+
+
+from kitchenmusique import core, detect
 
 
 if __name__ == "__main__":
@@ -16,9 +19,25 @@ def main():
 
     logger.debug("Kitchenmusique -- starting...")
 
-    playlistUpdater.register_providers_from_config()
 
-    playlistUpdater.start()
+    playlistUpdater.register_providers_from_config()
+    playlistThread = threading.Thread(target = playlistUpdater.start)
+    playlistThread.start()
+
+    neuralNet = detect.PersonDetector()
+
+    rtspClient = detect.RtspClient()
+    rtspClient.connect("rtsp://192.168.1.100:8554/unicast")
+
+    while True:
+        image = rtspClient.get_image()
+
+        if image is None:
+            continue
+
+        neuralNet.visualize(image)
+
+
 
     logger.info("Kitchenmusique -- exiting successfully")
     return True

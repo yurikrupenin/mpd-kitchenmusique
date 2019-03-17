@@ -1,3 +1,5 @@
 requests
 lxml
 python-mpd2
+numpy
+opencv-python
