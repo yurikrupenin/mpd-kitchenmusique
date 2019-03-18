@@ -39,7 +39,6 @@ def _rtsp_client_wrapper(framequeue, heartbeatqueue, uri):
             if framequeue.qsize() < 2:
                 framequeue.put(img)
 
-
 class RtspClient:
     def __init__(self):
         self.process = None
@@ -97,17 +96,20 @@ class RtspClient:
 
     def get_image(self):
         """" Returns OpenCV image of last received frame from RTSP stream """
+
+        global _queue
         image = None
 
 
         try:
-            image = _queue.get()
+            image = _queue.get_nowait()
 
             if _queue.qsize() > 2:
                 self.logger.warning("RTSP: {0} unprocessed frames in queue!".format(_queue.qsize()))
 
         except:
             image = None
+            self.logger.debug("RTSP: Exception during image read op!")
 
 
         return image

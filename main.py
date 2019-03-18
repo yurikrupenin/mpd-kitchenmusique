@@ -39,18 +39,17 @@ def main():
     rtspClient.connect(config.CONFIG_RTSP_URL)
 
     while True:
-        image = rtspClient.get_image()
+        try:
+            image = rtspClient.get_image()
 
-        if image is None:
-            time.sleep(0.3)
+            if image is None:
+                time.sleep(0.3)
+                continue
+
+            descriptions = neuralNet.process(image, False)
+        except:
             continue
 
-        start = time.time()
-        descriptions = neuralNet.process(image, False)
-        end = time.time()
-
-
-        logger.info("Processed frame in {0} seconds.".format(end - start))
 
         matches = list(filter(lambda x: x.classid in config.CONFIG_YOLO_TRIGGER_CLASSES, descriptions))
         accepted = list(filter(lambda x: x.confidence > config.CONFIG_YOLO_CONFIDENCE_THRESHOLD, matches))
