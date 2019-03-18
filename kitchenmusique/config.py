@@ -14,6 +14,8 @@ CONFIG_MPD_USE_PASSWORD = False
 CONFIG_MPD_FORCE_CONSUME_MODE = True
 
 CONFIG_RTSP_URL = "rtsp://192.168.1.100:8554/unicast"
+CONFIG_RTSP_HEARTBEAT_INTERVAL = 3
+CONFIG_RTSP_HEARTBEAT_PANIC = 20
 
 CONFIG_ENABLED_PROVIDERS = [
     ProviderQuery(providers.SputnikMusic, "trending", "sputnikmusic-trending", PlaylistUpdateMode.REPLACE, 60, True)

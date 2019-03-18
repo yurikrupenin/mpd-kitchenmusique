@@ -42,6 +42,7 @@ def main():
         image = rtspClient.get_image()
 
         if image is None:
+            time.sleep(0.3)
             continue
 
         start = time.time()
