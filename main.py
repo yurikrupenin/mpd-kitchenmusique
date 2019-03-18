@@ -44,7 +44,12 @@ def main():
         if image is None:
             continue
 
-        descriptions = neuralNet.process(image, True)
+        start = time.time()
+        descriptions = neuralNet.process(image, False)
+        end = time.time()
+
+
+        logger.info("Processed frame in {0} seconds.".format(end - start))
 
         matches = list(filter(lambda x: x.classid in config.CONFIG_YOLO_TRIGGER_CLASSES, descriptions))
         accepted = list(filter(lambda x: x.confidence > config.CONFIG_YOLO_CONFIDENCE_THRESHOLD, matches))

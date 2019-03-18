@@ -24,7 +24,8 @@ def _rtsp_client_wrapper(framequeue, uri):
         ret, img = client.read()
 
         if ret:
-            framequeue.put(img)
+            if _queue.qsize() < 2:
+                framequeue.put(img)
         else:
             if not client.isOpened():
                 logger.info("Process ended.")
@@ -53,14 +54,11 @@ class RtspClient:
         image = None
 
 
-        count = 0
+        image = _queue.get()
 
-        while _queue.qsize() > 1:
-            image = _queue.get()
-            count += 1
+        if _queue.qsize() > 2:
+            self.logger.warning("RTSP: {0} unprocessed frames in queue!".format(_queue.qsize()))
 
-        if count > 30:
-            self.logger.debug("Big frameskip -- {0} frames!".format(count))
 
         return image
 
