@@ -97,11 +97,12 @@ class RtspClient:
 
     def get_image(self):
         """" Returns OpenCV image of last received frame from RTSP stream """
+        global _queue
         image = None
 
 
         try:
-            image = _queue.get()
+            image = _queue.get_nowait()
 
             if _queue.qsize() > 2:
                 self.logger.warning("RTSP: {0} unprocessed frames in queue!".format(_queue.qsize()))
