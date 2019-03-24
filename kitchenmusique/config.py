@@ -1,4 +1,4 @@
-import kitchenmusique.providers as providers
+from kitchenmusique import providers
 from kitchenmusique.core.types import ProviderQuery, PlaylistUpdateMode
 
 # If there's nobody in the video feed for 3 minutes, the music will stop playing
