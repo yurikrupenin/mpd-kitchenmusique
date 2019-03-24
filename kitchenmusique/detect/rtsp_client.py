@@ -39,7 +39,6 @@ def _rtsp_client_wrapper(framequeue, heartbeatqueue, uri):
             if framequeue.qsize() < 2:
                 framequeue.put(img)
 
-
 class RtspClient:
     def __init__(self):
         self.process = None
@@ -109,6 +108,7 @@ class RtspClient:
 
         except:
             image = None
+            self.logger.debug("RTSP: Exception during image read op!")
 
 
         return image
