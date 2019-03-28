@@ -3,12 +3,12 @@ import importlib
 
 from kitchenmusique import config, gproxy, providers
 
+
 def instantiate_provider(name):
-    ProviderType = getattr(importlib.import_module("kitchenmusique.providers"), name)
+    provider_type = getattr(importlib.import_module("kitchenmusique.providers"), name)
 
-    instance = ProviderType()
+    instance = provider_type()
     return instance
-
 
 
 def main():
@@ -31,6 +31,8 @@ def main():
 
     args = parser.parse_args()
 
+    provider = None
+
     try:
         provider = instantiate_provider(args.provider)
 
@@ -39,6 +41,10 @@ def main():
         print(e)
         exit(0)
 
+    finally:
+        if provider is None:
+            print("Failed to instantiate provider '{0}', exiting.".format(args.provider))
+            exit(0)
 
     if args.tracklist:
         print("Fetching track names from Google Play Music, this may take some time...")
@@ -55,6 +61,7 @@ def main():
     else:
         for entry in provider.get_playlist(args.query):
             print("{0} - {1}".format(entry.artist, entry.album))
+
 
 if __name__ == "__main__":
     main()

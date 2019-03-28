@@ -7,6 +7,7 @@ ProviderQuery = namedtuple("ProviderQuery", "provider querystring playlist updat
 
 DetectedObject = namedtuple("DetectedObject", "classid confidence")
 
+
 class PlaylistUpdateMode(Enum):
     APPEND = 1
     REPLACE = 2

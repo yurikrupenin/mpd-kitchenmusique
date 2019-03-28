@@ -1,5 +1,4 @@
 import logging
-import time
 
 import cv2
 import numpy as np
@@ -7,6 +6,7 @@ import numpy as np
 import kitchenmusique.config as config
 
 from kitchenmusique.core import DetectedObject
+
 
 class PersonDetector:
 
@@ -28,7 +28,6 @@ class PersonDetector:
 
         self.logger.debug("Network initialized.")
 
-
     def __get_output_layers(self):
         layer_names = self.network.getLayerNames()
 
@@ -36,31 +35,24 @@ class PersonDetector:
 
         return output_layers
 
-
     def __visualize_prediction(self, img, class_id, confidence, x, y, x_plus_w, y_plus_h):
-
         label = "{0} [{1}]".format(str(self.classes[class_id]), confidence)
-
         color = self.colors[class_id]
 
-        cv2.rectangle(img, (x,y), (x_plus_w,y_plus_h), color, 2)
-
-        cv2.putText(img, label, (x-10,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+        cv2.rectangle(img, (x, y), (x_plus_w, y_plus_h), color, 2)
+        cv2.putText(img, label, (x-10, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
         return img
-
 
     def process(self, image, visualize):
         width = image.shape[1]
         height = image.shape[0]
 
-        blob = cv2.dnn.blobFromImage(image, 1/255.0, (416,416),  swapRB=True, crop=False)
+        blob = cv2.dnn.blobFromImage(image, 1/255.0, (416, 416),  swapRB=True, crop=False)
 
         self.network.setInput(blob)
 
         outputs = self.network.forward(self.__get_output_layers())
-
-
 
         class_ids = []
         confidences = []
@@ -83,7 +75,6 @@ class PersonDetector:
                     class_ids.append(class_id)
                     confidences.append(float(confidence))
                     boxes.append([x, y, w, h])
-
 
         indices = cv2.dnn.NMSBoxes(boxes, confidences, config.CONFIG_YOLO_CONFIDENCE_THRESHOLD, nms_threshold)
 

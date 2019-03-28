@@ -10,7 +10,6 @@ class M3uParser:
         self.tracks = []
         self.__parse()
 
-
     def tracklist(self):
         return self.tracks
 
@@ -32,7 +31,7 @@ class M3uParser:
             else:
                 url = line
             
-            if trackinfo != None and url != None:
+            if trackinfo is not None and url is not None:
                 trackinfo = trackinfo.split(',')
 
                 if len(trackinfo) >= 2:

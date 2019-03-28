@@ -3,8 +3,6 @@ import multiprocessing as mp
 import threading
 import time
 
-
-import numpy
 import cv2
 
 from kitchenmusique import config
@@ -12,8 +10,8 @@ from kitchenmusique import config
 _queue = None
 _heartbeat_queue = None
 
-def _rtsp_client_wrapper(framequeue, heartbeatqueue, uri):
 
+def _rtsp_client_wrapper(framequeue, heartbeatqueue, uri):
     logger = mp.log_to_stderr(logging.DEBUG)
 
     logger.info("Starting client...")
@@ -39,6 +37,7 @@ def _rtsp_client_wrapper(framequeue, heartbeatqueue, uri):
             if framequeue.qsize() < 2:
                 framequeue.put(img)
 
+
 class RtspClient:
     def __init__(self):
         self.process = None
@@ -57,7 +56,6 @@ class RtspClient:
             while _heartbeat_queue.qsize() > 0:
                 last_heartbeat = _heartbeat_queue.get()
 
-
             if time.time() - last_heartbeat >= config.CONFIG_RTSP_HEARTBEAT_PANIC:
                 self.logger.warning("RTSP client heartbeat missed, restarting...")
                 self.process.terminate()
@@ -66,10 +64,8 @@ class RtspClient:
 
                 self.connect(self.server_uri)
 
-
                 self.logger.info("RTSP monitor thread restarted.")
                 return
-
 
     def connect(self, server_uri):
         global _queue
@@ -86,21 +82,19 @@ class RtspClient:
         _queue = mp.Queue()
         _heartbeat_queue = mp.Queue()
 
-
         self.process = mp.Process(target=_rtsp_client_wrapper, args=(_queue, _heartbeat_queue, self.server_uri))
         self.process.start()
 
         self.monitor_thread = threading.Thread(target=self._monitor_heartbeat, args=())
         self.monitor_thread.start()
 
-
     def get_image(self):
         """" Returns OpenCV image of last received frame from RTSP stream """
         global _queue
         image = None
 
-
         try:
+            global image
             image = _queue.get_nowait()
 
             if _queue.qsize() > 2:
@@ -109,7 +103,6 @@ class RtspClient:
         except:
             image = None
             self.logger.debug("RTSP: Exception during image read op!")
-
 
         return image
 
