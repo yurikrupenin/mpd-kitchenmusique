@@ -14,7 +14,7 @@ _heartbeat_queue = None
 def _rtsp_client_wrapper(framequeue, heartbeatqueue, uri):
     logger = mp.log_to_stderr(logging.DEBUG)
 
-    logger.info("Starting client...")
+    logger.info("Starting RTSP client...")
 
     client = cv2.VideoCapture(uri)
 
@@ -89,20 +89,23 @@ class RtspClient:
         self.monitor_thread.start()
 
     def get_image(self):
-        """" Returns OpenCV image of last received frame from RTSP stream """
+        """ Returns OpenCV image of last received frame from RTSP stream """
+        """ Returns None if read failed """
         global _queue
         image = None
 
         try:
-            global image
             image = _queue.get_nowait()
 
             if _queue.qsize() > 2:
                 self.logger.warning("RTSP: {0} unprocessed frames in queue!".format(_queue.qsize()))
 
-        except:
+        except Exception as e:
             image = None
             self.logger.debug("RTSP: Exception during image read op!")
 
-        return image
+        finally:
+            return image
+
+        return None
 
