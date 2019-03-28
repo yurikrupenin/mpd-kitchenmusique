@@ -65,7 +65,7 @@ class Request:
             if type(e.__context__) == urllib3.exceptions.ProtocolError:
                 return []
             else:
-                raise RtspConnectionError
+                raise ConnectionError("Could not connect to GMusicProxy!")
 
         return M3uParser(req.text).tracklist()
 
