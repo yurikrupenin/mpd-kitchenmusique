@@ -43,6 +43,7 @@ class RtspClient:
         self.process = None
         self.monitor_thread = None
         self.server_uri = None
+        self.stop_event = threading.Event()
         self.logger = logging.getLogger("kitchenmusique")
 
     def _monitor_heartbeat(self):
@@ -51,7 +52,7 @@ class RtspClient:
 
         last_heartbeat = time.time()
 
-        while True:
+        while not (self.stop_event.is_set()):
             time.sleep(1)
             while _heartbeat_queue.qsize() > 0:
                 last_heartbeat = _heartbeat_queue.get()
@@ -64,8 +65,8 @@ class RtspClient:
 
                 self.connect(self.server_uri)
 
-                self.logger.info("RTSP monitor thread restarted.")
-                return
+                self.logger.info("RTSP child process restarted.")
+                last_heartbeat = time.time()
 
     def connect(self, server_uri):
         global _queue
@@ -85,8 +86,9 @@ class RtspClient:
         self.process = mp.Process(target=_rtsp_client_wrapper, args=(_queue, _heartbeat_queue, self.server_uri))
         self.process.start()
 
-        self.monitor_thread = threading.Thread(target=self._monitor_heartbeat, args=())
-        self.monitor_thread.start()
+        if self.monitor_thread is None:
+            self.monitor_thread = threading.Thread(target=self._monitor_heartbeat, args=())
+            self.monitor_thread.start()
 
     def get_image(self):
         """ Returns OpenCV image of last received frame from RTSP stream """
@@ -107,5 +109,17 @@ class RtspClient:
         finally:
             return image
 
+        # Should be unreachable
         return None
+
+    def terminate(self):
+        self.logger.debug("RTSP client: terminating heartbeat monitor thread...")
+        self.stop_event.set()
+        self.monitor_thread.join()
+        self.logger.debug("Done.")
+
+        self.logger.debug("RTSP client: terminating child process...")
+        self.process.terminate()
+        self.process.join()
+        self.logger.debug("Done.")
 

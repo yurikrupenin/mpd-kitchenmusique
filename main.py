@@ -1,4 +1,5 @@
 import logging
+import sys
 import threading
 import time
 
@@ -13,10 +14,34 @@ from kitchenmusique import core, config, detect
 
 if __name__ == "__main__":
     playlistUpdater = core.PlaylistUpdater()
+    playlistThread= threading.Thread(target=playlistUpdater.start)
+    rtspClient = None
     logger = logging.getLogger("kitchenmusique")
 
 
+def exit_handler():
+    global rtspClient
+    global logger
+
+    if rtspClient is not None:
+        logger.debug("Exit handler: terminating RTSP client")
+        rtspClient.terminate()
+    else:
+        logger.debug("Exit handler: RTSP client isn't even initialized - nothing to terminate!")
+
+    if playlistThread is not None:
+        logger.debug("Exit handler: killing playlist updater...")
+        playlistUpdater.cancel()
+        playlistThread.join()
+        logger.debug("Done!")
+
+    logger.debug("Exit handler: everything's done!")
+
 def main():
+    global rtspClient
+    global playlistUpdater
+    global logger
+
     triggered = False
     last_triggered = time.time()
 
@@ -28,17 +53,17 @@ def main():
     logger.debug("Kitchenmusique -- starting...")
 
     playlistUpdater.register_providers_from_config()
-    playlist_thread = threading.Thread(target=playlistUpdater.start)
-    playlist_thread.start()
+
+    playlistThread.start()
 
     neural_net = detect.PersonDetector()
 
-    rtsp_client = detect.RtspClient()
-    rtsp_client.connect(config.CONFIG_RTSP_URL)
+    rtspClient = detect.RtspClient()
+    rtspClient.connect(config.CONFIG_RTSP_URL)
 
     while True:
         try:
-            image = rtsp_client.get_image()
+            image = rtspClient.get_image()
 
             if image is None:
                 time.sleep(0.3)
@@ -110,12 +135,16 @@ def main():
                 client.stop()
 
     logger.info("Kitchenmusique -- exiting successfully")
+    exit_handler()
     return True
 
 
 if __name__ == "__main__":
     try:
         main()
+    except KeyboardInterrupt:
+        exit_handler()
+        sys.exit(0)
     except Exception as e:
         logger.error("Exiting due to unhandled exception:")
         logger.exception(e)

@@ -1,5 +1,6 @@
 ﻿import logging
 import sched
+import threading
 import time
 
 # mpd client throws this when connection fails
@@ -17,6 +18,8 @@ class PlaylistUpdater:
         self.logger = logging.getLogger("kitchenmusique")
         self.providers = []
         self.scheduler = sched.scheduler(time.time, time.sleep)
+        self.stop_event = threading.Event()
+        self.event_ = None
 
     def register_providers_from_config(self):
         for desc in config.CONFIG_ENABLED_PROVIDERS:
@@ -106,7 +109,7 @@ class PlaylistUpdater:
         except Exception as e:
             self.logger.error("Failed to update provider '{0}' - {1}!".format(desc.provider.__name__, e))
         finally:
-            self.scheduler.enter(
+            self.event_ = self.scheduler.enter(
                 desc.updateinterval * 60,
                 1,
                 self.__update_provider_sched_wrapper,
@@ -121,10 +124,17 @@ class PlaylistUpdater:
             except Exception as e:
                 self.logger.error("Failed to update provider '{0}' - {1}!".format(entry.provider.__name__, e))
             finally:
-                self.scheduler.enter(
+                self.event_ = self.scheduler.enter(
                     entry.updateinterval * 60,
                     1,
                     self.__update_provider_sched_wrapper,
                     (entry,))
 
-        self.scheduler.run()
+        while not self.stop_event.is_set():
+            self.scheduler.run(False)
+            time.sleep(1)
+
+    def cancel(self):
+        self.stop_event.set()
+        if self.event_ is not None:
+            self.scheduler.cancel(self.event_)
